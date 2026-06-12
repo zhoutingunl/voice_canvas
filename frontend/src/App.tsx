@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CanvasStage } from "./canvas/CanvasStage";
 import { MicIndicator } from "./ui/MicIndicator";
 import { CommandLog, type LogEntry } from "./ui/CommandLog";
+import { MetricsPanel } from "./ui/MetricsPanel";
 import { DictConfig } from "./ui/DictConfig";
 import { normalize } from "./parser/normalize";
 import { getMergedDict } from "./parser/dictStore";
@@ -165,6 +166,7 @@ export default function App() {
           <CanvasStage objects={state.objects} />
         </div>
         <aside className="app__side">
+          <MetricsPanel logs={logs} />
           <CommandLog entries={logs} />
         </aside>
       </main>
