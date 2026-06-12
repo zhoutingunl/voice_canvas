@@ -5,6 +5,7 @@ import { CommandLog, type LogEntry } from "./ui/CommandLog";
 import { normalize } from "./parser/normalize";
 import { ruleParse } from "./parser/rules";
 import { applyCommands, initialState, setEntityImage, type CanvasState } from "./engine/canvasReducer";
+import { resolveScene } from "./engine/sceneLayout";
 import { parseCommand, imagine } from "./api/backend";
 import { createASR } from "./asr/createASR";
 import type { Command } from "./types/dsl";
@@ -67,9 +68,11 @@ export default function App() {
         last_id: stateRef.current.lastId,
       };
       const res = await parseCommand(text, ctx);
-      setState((s) => applyCommands(s, res.commands));
-      pushLog({ text, via: "llm", count: res.commands.length, ms: Math.round(performance.now() - t0) });
-      void backfillEntities(res.commands);
+      // 场景图：把 entity 的相对关系解析为绝对坐标
+      const resolved = resolveScene(res.commands);
+      setState((s) => applyCommands(s, resolved));
+      pushLog({ text, via: "llm", count: resolved.length, ms: Math.round(performance.now() - t0) });
+      void backfillEntities(resolved);
     } catch (err) {
       pushLog({ text, via: "error", count: 0, ms: Math.round(performance.now() - t0) });
       console.error(err);

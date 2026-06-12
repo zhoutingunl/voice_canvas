@@ -3,6 +3,7 @@
 import { Circle, Ellipse, Group, Image as KImage, Layer, Line, Rect, Stage, Text } from "react-konva";
 import { useEffect, useState } from "react";
 import { CANVAS_H, CANVAS_W, type CanvasObject } from "../types/dsl";
+import { entityEmoji } from "../engine/assets";
 
 function num(v: unknown, d = 0): number {
   return typeof v === "number" ? v : d;
@@ -27,15 +28,22 @@ function EntityNode({ o }: { o: CanvasObject }) {
   if (o.status === "ready" && img) {
     return <KImage image={img} x={o.x - w / 2} y={o.y - h / 2} width={w} height={h} />;
   }
-  // 占位骨架（生成中 / 失败）
-  const failed = o.status === "failed";
+  // 失败：用 emoji 素材兜底（保证场景可读，design.md §9）
+  if (o.status === "failed") {
+    return (
+      <Group x={o.x - w / 2} y={o.y - h / 2}>
+        <Text width={w} height={h * 0.7} align="center" verticalAlign="middle" fontSize={72}
+          text={entityEmoji(o.entity)} />
+        <Text width={w} y={h * 0.72} align="center" fontSize={14} fill="#6b7280" text={o.entity ?? "实体"} />
+      </Group>
+    );
+  }
+  // 生成中：占位骨架
   return (
     <Group x={o.x - w / 2} y={o.y - h / 2}>
-      <Rect width={w} height={h} cornerRadius={10} fill={failed ? "#fde2e2" : "#eef0f3"}
-        stroke={failed ? "#e06464" : "#b8bec8"} dash={[8, 6]} />
-      <Text width={w} height={h} align="center" verticalAlign="middle" fontSize={15}
-        fill={failed ? "#c0392b" : "#6b7280"}
-        text={failed ? `⚠ ${o.entity ?? "实体"}\n生成失败` : `🎨 ${o.entity ?? "实体"}\n生成中…`} />
+      <Rect width={w} height={h} cornerRadius={10} fill="#eef0f3" stroke="#b8bec8" dash={[8, 6]} />
+      <Text width={w} height={h} align="center" verticalAlign="middle" fontSize={15} fill="#6b7280"
+        text={`${entityEmoji(o.entity)} ${o.entity ?? "实体"}\n生成中…`} />
     </Group>
   );
 }
