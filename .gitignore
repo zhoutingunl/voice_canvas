@@ -32,3 +32,6 @@ pnpm-debug.log*
 .idea/
 .vscode/
 *.swp
+
+# TS 构建缓存
+*.tsbuildinfo
