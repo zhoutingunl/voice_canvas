@@ -29,6 +29,29 @@ body { margin: 0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", 
 .log__via { flex: 0 0 auto; font-size: 11px; padding: 2px 6px; border-radius: 6px; background: #eef2ff; color: #4338ca; }
 .log__row--rule .log__via { background: #ecfdf5; color: #047857; }
 .log__row--error .log__via { background: #fef2f2; color: #b91c1c; }
+.log__row--clarify .log__via { background: #fffbeb; color: #b45309; }
+
+/* L3 澄清横幅 */
+.clarify { display: flex; align-items: center; gap: 10px; padding: 12px 16px; margin: 0 0 16px;
+  background: #fffbeb; border: 1px solid #fcd34d; border-radius: 12px; }
+.clarify__icon { font-size: 20px; }
+.clarify__q { font-size: 15px; color: #92400e; }
+
+/* 同音词典配置页 */
+.cfg { max-width: 900px; margin: 0 auto; padding: 16px; }
+.cfg__head { display: flex; justify-content: space-between; align-items: center; }
+.cfg__head h2 { font-size: 20px; margin: 0; }
+.cfg__head small { font-size: 13px; color: #6b7280; font-weight: 400; }
+.cfg__add { display: flex; align-items: center; gap: 8px; margin: 16px 0; }
+.cfg__add input { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 15px; }
+.cfg__cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.cfg__list { list-style: none; padding: 0; margin: 8px 0; max-height: 420px; overflow: auto; }
+.cfg__list li { padding: 6px 0; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
+.cfg__list code { background: #f3f4f6; padding: 1px 6px; border-radius: 4px; }
+.cfg__list--ro li { color: #6b7280; }
+.cfg__del { float: right; border: none; background: none; color: #b91c1c; cursor: pointer; font-size: 13px; }
+.cfg__empty { color: #9ca3af; font-size: 14px; }
+@media (max-width: 700px) { .cfg__cols { grid-template-columns: 1fr; } }
 .log__text { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .log__meta { flex: 0 0 auto; color: #9ca3af; }
 
