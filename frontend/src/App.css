@@ -22,7 +22,15 @@ body { margin: 0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", 
 .app__canvas { background: #fff; border-radius: 12px; padding: 8px; overflow: auto; }
 .app__side { min-width: 0; }
 
-.log { background: #fff; border-radius: 12px; padding: 12px; max-height: 600px; overflow: auto; }
+.metrics { background: #fff; border-radius: 12px; padding: 12px; margin-bottom: 16px; }
+.metrics__title { font-weight: 600; margin-bottom: 10px; }
+.metrics__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.metrics__stat { background: #f9fafb; border-radius: 8px; padding: 8px 10px; }
+.metrics__label { font-size: 12px; color: #6b7280; }
+.metrics__value { font-size: 16px; font-weight: 600; }
+.metrics__hint { font-size: 11px; color: #9ca3af; }
+
+.log { background: #fff; border-radius: 12px; padding: 12px; max-height: 420px; overflow: auto; }
 .log__title { font-weight: 600; margin-bottom: 8px; }
 .log__empty { color: #9ca3af; font-size: 13px; }
 .log__row { display: flex; gap: 8px; align-items: center; padding: 6px 0; border-top: 1px solid #f3f4f6; font-size: 13px; }
