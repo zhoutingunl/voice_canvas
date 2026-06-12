@@ -13,6 +13,7 @@ from __future__ import annotations
 from flask import Flask, jsonify, request
 
 from config import get_config
+from services.bailian_asr import BailianASR, BailianASRError
 from services.minimax_image import MiniMaxImage, MiniMaxImageError
 from services.minimax_llm import MiniMaxLLM, MiniMaxLLMError
 
@@ -23,6 +24,7 @@ def create_app(cfg=None) -> Flask:
     app.config["VC_CFG"] = cfg
     llm = MiniMaxLLM(cfg)
     image = MiniMaxImage(cfg)
+    asr_engine = BailianASR(cfg)
 
     allowed = {o.strip() for o in cfg.allowed_origins.split(",") if o.strip()}
 
@@ -78,13 +80,19 @@ def create_app(cfg=None) -> Flask:
 
     @app.post("/api/asr")
     def asr():
-        # 阿里百炼 paraformer 实时 ASR 走 WebSocket 流式，将在后续 PR 接入。
-        # 桌面端默认使用浏览器 Web Speech API（前端，无需后端），故此处先占位。
-        return jsonify({
-            "error": "云端 ASR（百炼 paraformer）将在后续 PR 接入；桌面端请使用前端 Web Speech API。",
-            "asr_model": cfg.bailian_asr_model,
-            "ready": cfg.bailian_ready,
-        }), 501
+        # 接收前端上传的 WAV（16kHz 单声道）二进制，调百炼 paraformer 识别。
+        audio = request.get_data()
+        if not audio:
+            return jsonify({"error": "缺少音频数据"}), 400
+        try:
+            sample_rate = int(request.headers.get("X-Sample-Rate", "16000"))
+        except ValueError:
+            sample_rate = 16000
+        try:
+            text = asr_engine.transcribe(audio, sample_rate=sample_rate)
+            return jsonify({"text": text})
+        except BailianASRError as e:
+            return jsonify({"error": str(e)}), 502
 
     return app
 

@@ -26,6 +26,21 @@ export async function parseCommand(text: string, context?: ParseContext): Promis
   return resp.json();
 }
 
+/** 上传一段 WAV 音频 → 文本（后端百炼 paraformer）。 */
+export async function transcribeAudio(wav: Blob, sampleRate = 16000): Promise<string> {
+  const resp = await fetch("/api/asr", {
+    method: "POST",
+    headers: { "Content-Type": "application/octet-stream", "X-Sample-Rate": String(sampleRate) },
+    body: wav,
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error || `asr HTTP ${resp.status}`);
+  }
+  const data = await resp.json();
+  return (data.text || "").trim();
+}
+
 /** 文本 → 图片 url（后端 image-01-live）。 */
 export async function imagine(prompt: string, aspectRatio = "1:1"): Promise<{ urls?: string[]; base64?: string }> {
   const resp = await fetch("/api/imagine", {
