@@ -1,6 +1,6 @@
 Flask>=3.0
 requests>=2.31
+dashscope>=1.20        # 阿里百炼 paraformer 语音识别
 # 测试
 pytest>=8.0
 # 说明：CORS 手写实现于 app.py，未引入 flask-cors。
-# 阿里百炼 ASR（paraformer）后续 PR 接入时再加：dashscope>=1.20

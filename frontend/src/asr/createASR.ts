@@ -1,16 +1,12 @@
-// ASR 工厂：按环境/偏好选择引擎。
-// 默认 Web Speech（免费）；不支持时回退（百炼云端在后续 PR 接入）。
+// ASR 工厂：按模式选择引擎。
+// web-speech：免费、依赖 Google（国内可能不稳）；bailian：阿里云，国内稳定。
 
 import type { IASREngine } from "./types";
 import { WebSpeechASR } from "./WebSpeechASR";
+import { BailianASR } from "./BailianASR";
 
-export type ASRMode = "web-speech" | "bailian" | "auto";
+export type ASRMode = "web-speech" | "bailian";
 
-export function createASR(mode: ASRMode = "auto"): IASREngine {
-  if (mode === "bailian") {
-    // 占位：百炼云端 ASR 在后续 PR 接入；当前回退到 Web Speech。
-    return new WebSpeechASR();
-  }
-  // auto / web-speech
-  return new WebSpeechASR();
+export function createASR(mode: ASRMode = "web-speech"): IASREngine {
+  return mode === "bailian" ? new BailianASR() : new WebSpeechASR();
 }

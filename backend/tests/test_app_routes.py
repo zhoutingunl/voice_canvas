@@ -44,10 +44,23 @@ def test_imagine_missing_prompt_400(client):
     assert r.status_code == 400
 
 
-def test_asr_stub_501(client):
-    r = client.post("/api/asr", json={})
-    assert r.status_code == 501
-    assert "百炼" in r.get_json()["error"]
+def test_asr_success(client):
+    with patch("app.BailianASR.transcribe", return_value="画一个圆"):
+        r = client.post("/api/asr", data=b"RIFFfake", content_type="application/octet-stream")
+    assert r.status_code == 200
+    assert r.get_json()["text"] == "画一个圆"
+
+
+def test_asr_empty_audio_400(client):
+    r = client.post("/api/asr", data=b"", content_type="application/octet-stream")
+    assert r.status_code == 400
+
+
+def test_asr_service_error_502(client):
+    from services.bailian_asr import BailianASRError
+    with patch("app.BailianASR.transcribe", side_effect=BailianASRError("boom")):
+        r = client.post("/api/asr", data=b"RIFFfake", content_type="application/octet-stream")
+    assert r.status_code == 502
 
 
 def test_cors_header_for_allowed_origin(client):

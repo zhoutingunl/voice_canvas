@@ -11,7 +11,7 @@ import { applyCommands, initialState, setEntityImage, type CanvasState } from ".
 import { resolveScene } from "./engine/sceneLayout";
 import { classifyReply, needsClarification, summarize } from "./engine/clarify";
 import { parseCommand, imagine } from "./api/backend";
-import { createASR } from "./asr/createASR";
+import { createASR, type ASRMode } from "./asr/createASR";
 import type { Command } from "./types/dsl";
 import "./App.css";
 
@@ -32,8 +32,9 @@ export default function App() {
   const [view, setView] = useState<"canvas" | "config">("canvas");
   const [pending, setPending] = useState<Pending | null>(null);
   const [dictVersion, setDictVersion] = useState(0);
+  const [asrMode, setAsrMode] = useState<ASRMode>("web-speech");
 
-  const asr = useMemo(() => createASR("auto"), []);
+  const asr = useMemo(() => createASR(asrMode), [asrMode]);
   const stateRef = useRef(state);
   stateRef.current = state;
   const pendingRef = useRef<Pending | null>(pending);
@@ -148,11 +149,21 @@ export default function App() {
             ? <button className="btn btn--primary" onClick={startMic}>🎤 开始聆听</button>
             : <button className="btn" onClick={() => asr.stop()}>⏹ 停止聆听</button>}
           <button className="btn" onClick={() => setView("config")}>⚙ 同音词典</button>
+          <div className="asr-switch">
+            <span>识别引擎：</span>
+            <button className={`asr-switch__opt ${asrMode === "web-speech" ? "is-on" : ""}`}
+              onClick={() => { asr.stop(); setAsrMode("web-speech"); }}>Web Speech（免费）</button>
+            <button className={`asr-switch__opt ${asrMode === "bailian" ? "is-on" : ""}`}
+              onClick={() => { asr.stop(); setAsrMode("bailian"); }}>百炼（云端·稳定）</button>
+          </div>
+        </div>
+        <div className="app__hintline">
           <span className="app__hint">说："画一个红色的圆" / "画三个圆排成一行" / "画一只加菲猫靠在黑桌边" / "撤销" / "清空"</span>
         </div>
       </header>
 
-      <MicIndicator listening={listening} partial={partial} />
+      <MicIndicator listening={listening} partial={partial}
+        engine={asrMode === "bailian" ? "百炼云端 ASR" : "Web Speech"} />
 
       {pending && (
         <div className="clarify">
