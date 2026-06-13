@@ -1,5 +1,7 @@
 # VoiceCanvas — AI 语音绘图工具
 
+[![CI](https://github.com/zhoutingunl/voice_canvas/actions/workflows/ci.yml/badge.svg)](https://github.com/zhoutingunl/voice_canvas/actions/workflows/ci.yml)
+
 一款 **纯语音控制** 的绘图工具：用户不使用鼠标或键盘，仅通过语音指令完成绘图创作。校园招聘项目试题。
 
 > 📋 **评审请先看** [`HANDOFF.md`](./HANDOFF.md) — 交付说明：计划支持哪些指令能力、最终实现了哪些、未完成部分的原因，以及验收指引。
@@ -26,8 +28,9 @@
 
 ## 能力一览
 
-- **第 1 档**：语音创建圆/矩形/椭圆/三角/直线/文字，调整颜色、尺寸、位置，删除、清空、撤销、重做
+- **第 1 档**：语音创建圆/矩形/椭圆/三角/直线/文字，调整颜色、尺寸、位置，删除、清空、撤销、重做，**导出 PNG**（说"导出/保存"）
 - **第 2 档**：一句话拆多步（"画三个圆排成一行"）、相对引用（"把刚才那个往右移"）、修改已有图形、**语义场景生成**（"画一只加菲猫靠在黑桌边，桌上一盆花" → 牡丹）
+- **低延迟**：规则快路径覆盖控制指令 + 单图形（含**九宫格定位与数值尺寸**，如"在右上角画半径50的圆"），本地 <50ms
 - **容错**：L1 同音词典归一化 + L2 LLM 容错解析 + L3 低置信度澄清回问
 - **低延迟**：规则快路径（<50ms）+ 乐观渲染 + 占位骨架 + 异步回填
 
@@ -83,11 +86,11 @@ npm run dev
 ## 测试
 
 ```bash
-cd backend  && python3.11 -m pytest    # 36 用例
-cd frontend && npm test                # 97 用例
+cd backend  && python3.11 -m pytest    # 42 用例（覆盖率 95%）
+cd frontend && npm test                # 112 用例
 ```
 
-共 **133 个单元测试**，外部 API 全部 mock，离线可跑。
+共 **154 个单元测试**，外部 API 全部 mock，离线可跑。每次 push/PR 由 GitHub Actions 自动跑测试与覆盖率（见 `.github/workflows/ci.yml`）。
 
 ## 开发约定
 
