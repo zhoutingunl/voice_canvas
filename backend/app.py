@@ -10,9 +10,19 @@ CORS 手写（薄代理无需额外依赖）。
 """
 from __future__ import annotations
 
-from flask import Flask, jsonify, request
+import logging
+import time
+import uuid
+
+from flask import Flask, g, jsonify, request
 
 from config import get_config
+
+# 上传体积上限（ASR 音频）：防止超大请求撑爆内存
+MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+logger = logging.getLogger("voicecanvas")
 from services.bailian_asr import BailianASR, BailianASRError
 from services.minimax_image import MiniMaxImage, MiniMaxImageError
 from services.minimax_llm import MiniMaxLLM, MiniMaxLLMError
@@ -22,11 +32,30 @@ def create_app(cfg=None) -> Flask:
     cfg = cfg or get_config()
     app = Flask(__name__)
     app.config["VC_CFG"] = cfg
+    app.config["MAX_CONTENT_LENGTH"] = MAX_CONTENT_LENGTH
     llm = MiniMaxLLM(cfg)
     image = MiniMaxImage(cfg)
     asr_engine = BailianASR(cfg)
 
     allowed = {o.strip() for o in cfg.allowed_origins.split(",") if o.strip()}
+
+    @app.before_request
+    def start_timer():
+        g.request_id = uuid.uuid4().hex[:8]
+        g.t0 = time.perf_counter()
+
+    @app.after_request
+    def log_and_tag(resp):
+        rid = getattr(g, "request_id", "-")
+        if hasattr(g, "t0"):
+            ms = int((time.perf_counter() - g.t0) * 1000)
+            logger.info("[%s] %s %s -> %s %dms", rid, request.method, request.path, resp.status_code, ms)
+        resp.headers["X-Request-Id"] = rid
+        return resp
+
+    @app.errorhandler(413)
+    def too_large(_e):
+        return jsonify({"error": "请求体过大（上限 16MB）"}), 413
 
     @app.after_request
     def add_cors(resp):
