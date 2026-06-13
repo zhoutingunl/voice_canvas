@@ -10,8 +10,10 @@ import { ruleParse } from "./parser/rules";
 import { applyCommands, initialState, setEntityImage, type CanvasState } from "./engine/canvasReducer";
 import { resolveScene } from "./engine/sceneLayout";
 import { classifyReply, needsClarification, summarize } from "./engine/clarify";
-import { parseCommand, imagine } from "./api/backend";
+import { parseCommand, imagine, imagineImageSrc } from "./api/backend";
 import { asrModeFromSearch, createASR, type ASRMode } from "./asr/createASR";
+import { downloadDataUrl, isExportCommand } from "./engine/exportImage";
+import type Konva from "konva";
 import type { Command } from "./types/dsl";
 import "./App.css";
 
@@ -45,6 +47,20 @@ export default function App() {
   const dictRef = useRef(dict);
   dictRef.current = dict;
   const fetching = useRef<Set<string>>(new Set());
+  const stageRef = useRef<Konva.Stage>(null);
+
+  const exportCanvas = useCallback((): boolean => {
+    try {
+      const uri = stageRef.current?.toDataURL({ pixelRatio: 2 });
+      if (!uri) return false;
+      downloadDataUrl(uri);
+      return true;
+    } catch (e) {
+      // 画布可能因含跨域图片被污染（base64 未取到时回退 url）→ toDataURL 抛错
+      console.warn("导出失败（画布跨域污染）:", e);
+      return false;
+    }
+  }, []);
 
   const pushLog = useCallback((e: Omit<LogEntry, "id">) => {
     logSeq += 1;
@@ -60,8 +76,7 @@ export default function App() {
       const id = c.id;
       imagine(c.prompt)
         .then((res) => {
-          const url = res.urls?.[0] ?? (res.base64 ? `data:image/png;base64,${res.base64}` : null);
-          setState((s) => setEntityImage(s, id, url));
+          setState((s) => setEntityImage(s, id, imagineImageSrc(res)));
         })
         .catch(() => setState((s) => setEntityImage(s, id, null)))
         .finally(() => fetching.current.delete(id));
@@ -82,6 +97,13 @@ export default function App() {
 
     // 语音开关
     if (/(停止聆听|别听了|暂停聆听)/.test(text)) { asr.stop(); return; }
+
+    // 导出/保存：完成"产出"闭环
+    if (isExportCommand(text)) {
+      const ok = exportCanvas();
+      pushLog({ text: ok ? `${text} → 导出 PNG` : `${text} → 导出失败`, via: ok ? "rule" : "error", count: 0, ms: 0 });
+      return;
+    }
 
     // L3：若有待确认项，先处理用户回复
     const p = pendingRef.current;
@@ -125,7 +147,7 @@ export default function App() {
       pushLog({ text, via: "error", count: 0, ms: Math.round(performance.now() - t0) });
       console.error(err);
     }
-  }, [asr, pushLog, execute]);
+  }, [asr, pushLog, execute, exportCanvas]);
 
   const startMic = useCallback(() => {
     asr.start({
@@ -167,7 +189,7 @@ export default function App() {
           </div>
         </div>
         <div className="app__hintline">
-          <span className="app__hint">说："画一个红色的圆" / "画三个圆排成一行" / "画一只加菲猫靠在黑桌边" / "撤销" / "清空"</span>
+          <span className="app__hint">说："画一个红色的圆" / "在右上角画半径50的圆" / "画三个圆排成一行" / "画一只加菲猫靠在黑桌边" / "撤销" / "清空" / "导出"</span>
         </div>
       </header>
 
@@ -183,7 +205,7 @@ export default function App() {
 
       <main className="app__main">
         <div className="app__canvas">
-          <CanvasStage objects={state.objects} />
+          <CanvasStage objects={state.objects} stageRef={stageRef} />
         </div>
         <aside className="app__side">
           <MetricsPanel logs={logs} />

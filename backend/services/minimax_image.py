@@ -6,6 +6,8 @@
 """
 from __future__ import annotations
 
+import base64
+
 import requests
 
 
@@ -51,7 +53,23 @@ class MiniMaxImage:
         payload = data.get("data", {}) or {}
         urls = payload.get("image_urls") or []
         if not urls and payload.get("image_base64"):
-            return {"base64": payload["image_base64"]}
+            return {"image_base64": payload["image_base64"], "mime": "image/jpeg"}
         if not urls:
             raise MiniMaxImageError(f"返回中无图片：{str(data)[:200]}")
-        return {"urls": urls}
+        # 服务端下载并转 base64：前端以 data URI 渲染，避免画布跨域污染、使其可导出
+        b64, mime = self._fetch_as_base64(urls[0])
+        out = {"urls": urls}
+        if b64:
+            out["image_base64"] = b64
+            out["mime"] = mime
+        return out
+
+    def _fetch_as_base64(self, url: str) -> tuple[str | None, str]:
+        try:
+            r = requests.get(url, timeout=self.cfg.timeout)
+            if r.status_code != 200:
+                return None, ""
+            mime = r.headers.get("Content-Type", "image/jpeg").split(";")[0]
+            return base64.b64encode(r.content).decode("ascii"), mime
+        except requests.RequestException:
+            return None, ""

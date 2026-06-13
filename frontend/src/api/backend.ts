@@ -41,8 +41,14 @@ export async function transcribeAudio(wav: Blob, sampleRate = 16000): Promise<st
   return (data.text || "").trim();
 }
 
-/** 文本 → 图片 url（后端 image-01-live）。 */
-export async function imagine(prompt: string, aspectRatio = "1:1"): Promise<{ urls?: string[]; base64?: string }> {
+export interface ImagineResult {
+  urls?: string[];
+  image_base64?: string;
+  mime?: string;
+}
+
+/** 文本 → 图片（后端 image-01-live）。优先返回 base64 以便前端用 data URI 渲染。 */
+export async function imagine(prompt: string, aspectRatio = "1:1"): Promise<ImagineResult> {
   const resp = await fetch("/api/imagine", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -53,4 +59,13 @@ export async function imagine(prompt: string, aspectRatio = "1:1"): Promise<{ ur
     throw new Error(err.error || `imagine HTTP ${resp.status}`);
   }
   return resp.json();
+}
+
+/**
+ * 选取图片渲染源：优先 data URI（同源、不污染画布、可导出），回退到 OSS url。
+ * 返回 null 表示无可用图片。
+ */
+export function imagineImageSrc(res: ImagineResult): string | null {
+  if (res.image_base64) return `data:${res.mime || "image/jpeg"};base64,${res.image_base64}`;
+  return res.urls?.[0] ?? null;
 }

@@ -2,6 +2,7 @@
 
 import { Circle, Ellipse, Group, Image as KImage, Layer, Line, Rect, Stage, Text } from "react-konva";
 import { useEffect, useState } from "react";
+import type Konva from "konva";
 import { CANVAS_H, CANVAS_W, type CanvasObject } from "../types/dsl";
 import { entityEmoji } from "../engine/assets";
 
@@ -79,14 +80,15 @@ function ShapeNode({ o }: { o: CanvasObject }) {
   }
 }
 
-export function CanvasStage({ objects, width = CANVAS_W, height = CANVAS_H }: {
+export function CanvasStage({ objects, width = CANVAS_W, height = CANVAS_H, stageRef }: {
   objects: CanvasObject[];
   width?: number;
   height?: number;
+  stageRef?: React.Ref<Konva.Stage>;
 }) {
   const sorted = [...objects].sort((a, b) => a.z - b.z);
   return (
-    <Stage width={width} height={height} style={{ background: "#fff", borderRadius: 12 }}>
+    <Stage ref={stageRef} width={width} height={height} style={{ background: "#fff", borderRadius: 12 }}>
       <Layer>
         {sorted.map((o) =>
           o.kind === "entity" ? <EntityNode key={o.id} o={o} /> : <ShapeNode key={o.id} o={o} />,
