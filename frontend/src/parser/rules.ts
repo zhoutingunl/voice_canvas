@@ -1,7 +1,7 @@
 // 规则快路径（本地、零延迟）：命中高频简单句直接产出指令，绕过 LLM。
 // 未命中返回 null → 交给后端 MiniMax-M3 解析（design.md §7）。
 
-import type { Command, ShapeKind } from "../types/dsl";
+import type { Command, PosEnum, ShapeKind } from "../types/dsl";
 
 const COLOR_MAP: Record<string, string> = {
   红: "red", 红色: "red", 蓝: "blue", 蓝色: "blue", 绿: "green", 绿色: "green",
@@ -29,6 +29,33 @@ function defaultGeo(shape: ShapeKind, scale: number): Command["geo"] {
     case "text": return { content: "文字" };
     default: return {};
   }
+}
+
+// 方位词 → 九宫格（复合词在前，避免"右上"被"右"截断）
+const POSITION: [RegExp, PosEnum][] = [
+  [/左上/, "top-left"], [/右上/, "top-right"], [/左下/, "bottom-left"], [/右下/, "bottom-right"],
+  [/(中间|中央|中心|正中)/, "center"],
+  [/(顶部|最上|上方|上边|上面)/, "top"], [/(底部|最下|下方|下边|下面)/, "bottom"],
+  [/(左边|左侧|靠左)/, "left"], [/(右边|右侧|靠右)/, "right"],
+  [/上/, "top"], [/下/, "bottom"], [/左/, "left"], [/右/, "right"],
+];
+
+function parsePosition(t: string): PosEnum | undefined {
+  for (const [re, pos] of POSITION) if (re.test(t)) return pos;
+  return undefined;
+}
+
+// 解析显式数值尺寸（半径/边长/宽高）；无则按 大/小 缩放回退默认。
+function parseGeo(t: string, shape: ShapeKind, scale: number): Command["geo"] {
+  const radius = t.match(/半径\s*(\d+)/);
+  const side = t.match(/(?:边长|大小)\s*(\d+)/);
+  const wh = t.match(/宽\s*(\d+)\D*高\s*(\d+)/);
+  if (shape === "circle" && radius) return { r: +radius[1] };
+  if (shape === "ellipse" && radius) return { rx: +radius[1], ry: Math.round(+radius[1] * 0.7) };
+  if (shape === "rect" && wh) return { w: +wh[1], h: +wh[2] };
+  if (shape === "rect" && side) return { w: +side[1], h: +side[1] };
+  if (shape === "triangle" && side) return { size: +side[1] };
+  return defaultGeo(shape, scale);
 }
 
 let seq = 0;
@@ -59,23 +86,27 @@ export function ruleParse(text: string): Command[] | null {
   if (/(画|绘制|加|添加|来)/.test(t)) {
     const shapeKey = Object.keys(SHAPE_MAP).find((k) => t.includes(k));
     if (shapeKey) {
+      // 含数量词（数字/中文数 + 量词）或布局词时不走快路径，交给 LLM 拆解。
+      // 注意：数量词需带量词（个/只…），避免把"半径50"的数字误判为数量。
+      const quantity = /(两|二|三|四|五|六|七|八|九|十|\d+)\s*(个|只|条|张|块|排)/;
+      const layout = /(排成|一行|一列|横排|竖排|并排|网格|方格|矩阵|多个|几个)/;
+      if (quantity.test(t) || layout.test(t)) {
+        return null;
+      }
+
       const shape = SHAPE_MAP[shapeKey];
       const colorKey = Object.keys(COLOR_MAP).find((k) => t.includes(k));
       const fill = colorKey ? COLOR_MAP[colorKey] : "black";
       const scale = /大/.test(t) ? 1.6 : /小/.test(t) ? 0.6 : 1;
 
-      // 含数量词或"排"/"行"/"列"等布局词时不走快路径，交给 LLM 拆解
-      if (/(两|二|三|四|五|六|2|3|4|5|6|几个|多个|排|一行|一列|网格|方格)/.test(t)) {
-        return null;
-      }
       return [{
         op: "create",
         id: newId(shape[0]),
         kind: "shape",
         shape,
-        geo: defaultGeo(shape, scale),
+        geo: parseGeo(t, shape, scale),
         fill,
-        pos: "center",
+        pos: parsePosition(t) ?? "center",
         confidence: 0.9,
       }];
     }

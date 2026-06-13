@@ -36,6 +36,28 @@ describe("ruleParse (规则快路径)", () => {
   it("含数量/布局词 → 返回 null（交给 LLM 拆解）", () => {
     expect(ruleParse("画三个圆排成一行")).toBeNull();
     expect(ruleParse("画一个2乘2的方格")).toBeNull();
+    expect(ruleParse("画5个圆")).toBeNull();
+  });
+
+  it("位置词 → 走快路径并设置九宫格 pos", () => {
+    expect(ruleParse("在右上角画一个蓝色的三角形")![0]).toMatchObject({ shape: "triangle", pos: "top-right" });
+    expect(ruleParse("在左下角画个圆")![0].pos).toBe("bottom-left");
+    expect(ruleParse("中间画个方块")![0].pos).toBe("center");
+  });
+
+  it("显式半径数值 → circle geo.r，且不被数量守卫误杀", () => {
+    const cmds = ruleParse("在右上角画半径50的红色圆");
+    expect(cmds).not.toBeNull(); // "50" 不应触发数量守卫
+    expect(cmds![0]).toMatchObject({ shape: "circle", fill: "red", pos: "top-right" });
+    expect(cmds![0].geo!.r).toBe(50);
+  });
+
+  it("矩形宽高数值", () => {
+    expect(ruleParse("画一个宽200高100的矩形")![0].geo).toMatchObject({ w: 200, h: 100 });
+  });
+
+  it("三角形边长数值", () => {
+    expect(ruleParse("画一个边长120的三角形")![0].geo!.size).toBe(120);
   });
 
   it("语义实体（加菲猫）→ 返回 null（交给 LLM）", () => {
