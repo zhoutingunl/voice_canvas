@@ -11,7 +11,7 @@ import { applyCommands, initialState, setEntityImage, type CanvasState } from ".
 import { resolveScene } from "./engine/sceneLayout";
 import { classifyReply, needsClarification, summarize } from "./engine/clarify";
 import { parseCommand, imagine } from "./api/backend";
-import { createASR, type ASRMode } from "./asr/createASR";
+import { asrModeFromSearch, createASR, type ASRMode } from "./asr/createASR";
 import type { Command } from "./types/dsl";
 import "./App.css";
 
@@ -32,7 +32,9 @@ export default function App() {
   const [view, setView] = useState<"canvas" | "config">("canvas");
   const [pending, setPending] = useState<Pending | null>(null);
   const [dictVersion, setDictVersion] = useState(0);
-  const [asrMode, setAsrMode] = useState<ASRMode>("web-speech");
+  const [asrMode, setAsrMode] = useState<ASRMode>(() =>
+    asrModeFromSearch(typeof location !== "undefined" ? location.search : ""),
+  );
 
   const asr = useMemo(() => createASR(asrMode), [asrMode]);
   const stateRef = useRef(state);
