@@ -68,6 +68,16 @@ def test_cors_header_for_allowed_origin(client):
     assert r.headers.get("Access-Control-Allow-Origin") == "http://localhost:5173"
 
 
+def test_request_id_header_present(client):
+    r = client.get("/api/health")
+    assert r.headers.get("X-Request-Id")
+    assert len(r.headers["X-Request-Id"]) == 8
+
+
+def test_max_content_length_configured(client):
+    assert client.application.config["MAX_CONTENT_LENGTH"] == 16 * 1024 * 1024
+
+
 def test_cors_preflight_ok_with_header(client):
     # Flask 自动处理 OPTIONS（200），after_request 补 CORS 头即可。
     r = client.open("/api/parse", method="OPTIONS", headers={"Origin": "http://localhost:5173"})
