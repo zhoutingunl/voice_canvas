@@ -9,27 +9,32 @@ function num(v: unknown, d = 0): number {
   return typeof v === "number" ? v : d;
 }
 
-function useHtmlImage(url?: string): HTMLImageElement | undefined {
+function useHtmlImage(url?: string): { img?: HTMLImageElement; failed: boolean } {
   const [img, setImg] = useState<HTMLImageElement | undefined>();
+  const [failed, setFailed] = useState(false);
   useEffect(() => {
     if (!url) return;
+    setImg(undefined);
+    setFailed(false);
     const im = new window.Image();
-    im.crossOrigin = "anonymous";
+    // 不设 crossOrigin：图床（阿里 OSS）不返回 CORS 头，设了反而触发 403、图片加载失败。
+    // 画布仅作展示、不导出，跨域污染无影响。
     im.src = url;
     im.onload = () => setImg(im);
+    im.onerror = () => setFailed(true);
   }, [url]);
-  return img;
+  return { img, failed };
 }
 
 function EntityNode({ o }: { o: CanvasObject }) {
-  const img = useHtmlImage(o.imageUrl);
+  const { img, failed } = useHtmlImage(o.imageUrl);
   const w = 140;
   const h = 140;
-  if (o.status === "ready" && img) {
+  if (o.status === "ready" && img && !failed) {
     return <KImage image={img} x={o.x - w / 2} y={o.y - h / 2} width={w} height={h} />;
   }
-  // 失败：用 emoji 素材兜底（保证场景可读，design.md §9）
-  if (o.status === "failed") {
+  // 失败 或 图片加载失败：用 emoji 素材兜底（保证场景可读，design.md §9）
+  if (o.status === "failed" || (o.status === "ready" && failed)) {
     return (
       <Group x={o.x - w / 2} y={o.y - h / 2}>
         <Text width={w} height={h * 0.7} align="center" verticalAlign="middle" fontSize={72}
