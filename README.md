@@ -76,14 +76,18 @@ npm run dev
 
 浏览器打开 http://localhost:5173 （**桌面用 Chrome/Edge**，需允许麦克风权限），点"🎤 开始聆听"，说出绘图指令。
 
+### Android App（WebView 套壳）
+
+`android/` 提供可在 Android Studio 一键构建的 WebView 套壳工程：加载前端并授予麦克风权限，手机端默认走百炼云端 ASR（WebView 不支持 Web Speech）。构建与配置见 [`android/README.md`](./android/README.md)。
+
 ## 测试
 
 ```bash
 cd backend  && python3.11 -m pytest    # 36 用例
-cd frontend && npm test                # 91 用例
+cd frontend && npm test                # 97 用例
 ```
 
-共 **127 个单元测试**，外部 API 全部 mock，离线可跑。
+共 **133 个单元测试**，外部 API 全部 mock，离线可跑。
 
 ## 开发约定
 
@@ -93,7 +97,7 @@ cd frontend && npm test                # 91 用例
 
 ## 状态
 
-核心功能已实现（PR #2–#9），含双 ASR 引擎（Web Speech + 百炼云端）。原生 App 套壳、QoS 独立看板为后续项，原因见 `design.md §18`。
+核心功能已实现，含双 ASR 引擎（Web Speech + 百炼云端）与 Android WebView 套壳工程（`android/`，需 Android Studio 构建为 APK）。QoS 独立看板等为后续项，原因见 `design.md §18`。
 
 ## AI 协作说明
 

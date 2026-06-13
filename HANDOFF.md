@@ -11,7 +11,7 @@
 - **是什么**：语音说"画一个红色的圆""画三个圆排成一行""画一只加菲猫靠在黑桌边"，工具实时绘制到画布。
 - **怎么实现的**：`语音 → ASR → L1 归一化 → 规则快路径 或 LLM(MiniMax-M3) 解析成指令 DSL → 画布渲染`；语义实体（猫/桌/花）经场景图分解 + 文生图（image-01-live）渲染。
 - **怎么跑**：见 [`README.md` 快速开始](./README.md)（后端 Flask + 前端 Vite，三步起）；演示话术见 [`DEMO.md`](./DEMO.md)。
-- **代码质量**：后端 36 + 前端 91 = **127 个单元测试全通过**；外部 API 全 mock、离线可跑。密钥仅存 `.env`、**绝不入库**。
+- **代码质量**：后端 36 + 前端 97 = **133 个单元测试全通过**；外部 API 全 mock、离线可跑。密钥仅存 `.env`、**绝不入库**。
 - **协作方式**：Claude Code 辅助，人定方向、AI 落地、人工验收；全程 PR 提交（见 README「AI 协作说明」）。
 
 ---
@@ -64,7 +64,7 @@
 
 | 项 | 原因 |
 | --- | --- |
-| 原生 App 套壳工程 | 前端已响应式、可被 WebView 直接加载；原生壳（含麦克风权限处理）属另一工程，时间所限 |
+| Android 套壳编译为成品 APK | `android/` 已提供完整可构建的 WebView 套壳工程（麦克风授权 + 前台不锁屏，默认百炼 ASR）；编译为 APK 需 Android Studio/SDK，未在开发环境产出成品包 |
 | 唤醒词 / 独立 VAD / TTS 回执 | 抗噪与语音回执为可选增强，非核心链路 |
 | QoS 独立 Dashboard | 已有实时指标面板 + 指令日志；独立的历史聚合看板未做 |
 | 文生图透明背景 | 图床返回普通图，未确认透明底；当前直接贴图、失败 emoji 兜底，未做前景抠图 |
@@ -103,7 +103,8 @@
 | 运行指南 | [`README.md`](./README.md) | 快速开始、技术栈、测试、AI 协作说明 |
 | 演示脚本 | [`DEMO.md`](./DEMO.md) | 按考点编排的验收话术 |
 | 后端 | [`backend/`](./backend) | Flask 薄代理 + 27→36 测试 |
-| 前端 | [`frontend/`](./frontend) | React+Konva + 91 测试 |
+| 前端 | [`frontend/`](./frontend) | React+Konva + 97 测试 |
+| Android 套壳 | [`android/`](./android) | WebView 套壳工程，Android Studio 一键构建 |
 | 凭据校验 | [`scripts/verify_keys.py`](./scripts/verify_keys.py) | 联网校验 .env 凭据 |
 | 开发过程 | GitHub PR #1–#11 | 每个 PR 一个功能单元、自带测试 |
 

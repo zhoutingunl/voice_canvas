@@ -10,3 +10,11 @@ export type ASRMode = "web-speech" | "bailian";
 export function createASR(mode: ASRMode = "web-speech"): IASREngine {
   return mode === "bailian" ? new BailianASR() : new WebSpeechASR();
 }
+
+/**
+ * 从 URL query 决定初始 ASR 引擎。
+ * Android WebView 不支持 Web Speech，套壳时以 ?asr=bailian 加载，默认走云端。
+ */
+export function asrModeFromSearch(search: string): ASRMode {
+  return new URLSearchParams(search).get("asr") === "bailian" ? "bailian" : "web-speech";
+}

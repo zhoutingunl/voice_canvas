@@ -381,13 +381,13 @@ voice_canvas/
 | 同音词典外置 JSON + 配置页 | — | ✅ | ✅ 已实现 | dictStore + DictConfig |
 | 乐观渲染 + 占位骨架 + 异步回填 + 素材兜底 | — | ✅ | ✅ 已实现 | entity 占位 → 真图 / emoji 兜底 |
 | 后端薄代理 + 密钥不入库 | — | ✅ | ✅ 已实现 | Flask /api/parse·imagine·asr |
-| 响应式前端（可 WebView 套壳基础） | — | ✅ | 🔶 部分 | 前端响应式就绪；原生壳工程未建 |
+| 响应式前端 + Android WebView 套壳 | — | ✅ | ✅ 已实现 | 前端响应式；`android/` 套壳工程（麦克风授权+前台不锁屏），需 Android Studio 构建 APK |
 | 云端 ASR（百炼 paraformer，手机/付费） | — | ✅ | ⏳ 未实现 | /api/asr 占位 501（见 §18） |
 | 唤醒词 / 独立 VAD / TTS 回执 | — | 🔶 可选 | ⏳ 未实现 | 可选增强（见 §18） |
 | QoS 指标聚合 / Dashboard | — | ✅ | 🔶 部分 | 指令日志含路径+延迟；无独立看板 |
 | 自由手绘 / 纯文生图 / 图层导出 / 协同 | 3 | ❌ 不做 | ❌ 不做 | 原因见 §18 |
 
-> **测试**：后端 27 个 pytest 用例 + 前端 73 个 vitest 用例，共 **100 个单元测试全部通过**；前端 `tsc --noEmit` 类型检查 + `vite build` 均通过。
+> **测试**：后端 36 个 pytest 用例 + 前端 97 个 vitest 用例，共 **133 个单元测试全部通过**；前端 `tsc --noEmit` 类型检查 + `vite build` 均通过。
 
 ---
 
@@ -400,7 +400,7 @@ voice_canvas/
 | 项 | 原因 | 后续 |
 | --- | --- | --- |
 | 云端 ASR（百炼 paraformer） | 桌面 demo 用浏览器 Web Speech API 已足够；paraformer 实时识别走 WebSocket 流式，需后端做音频中继 + 鉴权，工作量较大 | `/api/asr` 已留占位端点与 `IASREngine` 抽象，手机/付费路径后续接入 |
-| 原生 App 套壳工程 | 前端已响应式、可被 WebView 直接加载；但原生壳（含麦克风权限处理）属另一工程 | 前端就绪，套壳为几行原生代码 + 权限配置 |
+| Android 套壳编译为成品 APK | `android/` 已提供完整可构建工程（WebView + 麦克风授权 + 前台不锁屏，默认百炼 ASR） | 编译 APK 需 Android Studio/SDK，未在开发环境产出成品包 |
 | 唤醒词 / 独立 VAD | 当前依赖 Web Speech 内置的连续识别与断句；独立唤醒词、VAD 为抗噪增强项 | 列为可选增强 |
 | TTS 语音回执（Speech-2.8） | 锦上添花，非核心链路 | 可选增强 |
 | QoS 独立 Dashboard | 已有指令日志展示每条指令的路径（规则/LLM）与延迟；独立指标聚合看板未做 | 埋点字段已规划（§16），可后续接入 |
@@ -459,7 +459,7 @@ voice_canvas/
 - [x] 本文档"实现情况""未完成项"更新至当前状态
 - [x] README（根 / backend / frontend）
 - [~] ASR：Web Speech ✅；百炼云端 ASR ⏳（占位，见 §18）
-- [~] 响应式前端 ✅；WebView 原生壳工程 ⏳
+- [x] 响应式前端 + Android WebView 套壳工程（`android/`，APK 构建需 Android Studio）
 - [~] QoS：指令日志含路径+延迟 ✅；独立指标看板 ⏳
 - [ ] 可运行 Demo 录屏（需真实麦克风环境）
 
