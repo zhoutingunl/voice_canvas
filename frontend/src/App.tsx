@@ -136,6 +136,13 @@ export default function App() {
 
   useEffect(() => () => asr.stop(), [asr]);
 
+  // 开发态钩子：供截图/E2E 脚本程序化触发与语音相同的指令流水线（仅 dev，不进生产、无 UI）
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      (globalThis as Record<string, unknown>).__vcSay = (t: string) => handleText(t);
+    }
+  }, [handleText]);
+
   if (view === "config") {
     return <DictConfig onClose={() => setView("canvas")} onChange={() => setDictVersion((v) => v + 1)} />;
   }
